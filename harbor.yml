@@ -9,12 +9,14 @@ http:
   port: 80
 
 # The initial password of Harbor admin
-harbor_admin_password: Harbor12345
+# IMPORTANT: Change this password during deployment
+harbor_admin_password: PLACEHOLDER_ADMIN_PASSWORD
 
 # Harbor DB configuration
 database:
   # The password for the postgres user of Harbor DB
-  password: root123
+  # IMPORTANT: Change this password during deployment
+  password: PLACEHOLDER_DB_PASSWORD
   max_idle_conns: 100
   max_open_conns: 900
   conn_max_lifetime: 5m

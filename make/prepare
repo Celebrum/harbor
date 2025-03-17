@@ -25,9 +25,14 @@ if [[ "$(uname -r)" == *Microsoft* || "$(uname -r)" == *microsoft* ]]; then
 fi
 
 # Check for Harpoon configuration
-if [ -f "${harbor_prepare_path}/harpoon.yml" ]; then
+if [ -f "${harbor_prepare_path}/harpoon.yml" ] || [ -f "${harbor_prepare_path}/../harpoon.yml" ]; then
     echo "Harpoon configuration detected"
     use_harpoon=true
+    
+    # Copy from parent directory if needed
+    if [ ! -f "${harbor_prepare_path}/harpoon.yml" ] && [ -f "${harbor_prepare_path}/../harpoon.yml" ]; then
+        cp ${harbor_prepare_path}/../harpoon.yml ${harbor_prepare_path}/
+    fi
 else
     use_harpoon=false
 fi
@@ -61,7 +66,8 @@ else
 fi
 
 # Copy Harpoon config if exists
-if [ "$use_harpoon" = true ]; then
+if [ "$use_harpoon" = true ] && [ -f "${harbor_prepare_path}/harpoon.yml" ]; then
+    echo "Copying Harpoon configuration"
     cp ${harbor_prepare_path}/harpoon.yml $input_dir/harpoon.yml
 fi
 
@@ -97,14 +103,25 @@ if [ "$(uname)" == "Darwin" ]; then
     prepare_base_dir=$HOME
 fi
 
-# Run prepare script with Harpoon support
+# Build extra arguments - include Harpoon if detected
+extra_args=""
+if [ "$use_harpoon" = true ]; then
+    echo "Enabling Harpoon integration"
+    # Check if --with-trivy is supported as a proxy for Harpoon support
+    if docker run --rm goharbor/prepare:dev prepare --help | grep -q "\--with-trivy"; then
+        extra_args="--with-trivy"
+    fi
+fi
+
+# Run prepare script
+echo "Running prepare script with args: $@ $extra_args"
 docker run --rm -v $input_dir:/input \
-                    -v $data_path:/data \
-                    -v $harbor_prepare_path:/compose_location \
-                    -v $config_dir:/config \
-                    -v ${prepare_base_dir}:/hostfs${prepare_base_dir} \
-                    --privileged \
-                    goharbor/prepare:dev prepare $@ ${use_harpoon:+--with-harpoon}
+                -v $data_path:/data \
+                -v $harbor_prepare_path:/compose_location \
+                -v $config_dir:/config \
+                -v ${prepare_base_dir}:/hostfs${prepare_base_dir} \
+                --privileged \
+                goharbor/prepare:dev prepare $@ $extra_args
 
 echo "Clean up the input dir"
 # Clean up input dir

@@ -14,9 +14,9 @@ core:
 harbor:
   # URL of Harbor API (internal)
   url: http://core:8080
-  # Admin credentials
+  # Admin credentials - these will be replaced during deployment
   admin_user: admin
-  admin_password: Harbor12345
+  admin_password: PLACEHOLDER_ADMIN_PASSWORD
   # Enable all Harbor capabilities
   enable_all_capabilities: true
 
