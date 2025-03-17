@@ -1,0 +1,77 @@
+# Configuration file of Harbor with Harpoon integration
+
+# The IP address or hostname to access admin UI and registry service.
+hostname: harbor.localhost
+
+# http related config
+http:
+  # port for http, default is 80. If https enabled, this port will redirect to https port
+  port: 80
+
+# The initial password of Harbor admin
+harbor_admin_password: Harbor12345
+
+# Harbor DB configuration
+database:
+  # The password for the postgres user of Harbor DB
+  password: root123
+  max_idle_conns: 100
+  max_open_conns: 900
+  conn_max_lifetime: 5m
+  conn_max_idle_time: 0
+
+# The default data volume
+data_volume: /data
+
+# Log configurations
+log:
+  level: info
+  local:
+    rotate_count: 50
+    rotate_size: 200M
+    location: /var/log/harbor
+
+# Trivy configuration
+trivy:
+  ignore_unfixed: false
+  skip_update: false
+  skip_java_db_update: false
+  offline_scan: false
+  security_check: vuln
+  insecure: false
+  timeout: 5m0s
+
+jobservice:
+  max_job_workers: 10
+  job_loggers:
+    - STD_OUTPUT
+    - FILE
+  logger_sweeper_duration: 1
+
+notification:
+  webhook_job_max_retry: 3
+  webhook_job_http_client_timeout: 3
+
+# Enable purge _upload directories
+upload_purging:
+  enabled: true
+  age: 168h
+  interval: 24h
+  dryrun: false
+
+# This attribute is for migrator to detect the version of the .cfg file
+_version: 2.12.0
+
+# Kubernetes integration for Harbor and Harpoon
+kubernetes:
+  # Enable Kubernetes integration
+  enabled: true
+  # Use Kind cluster
+  kind_cluster: true
+  # Cluster name (matches your existing Kind cluster)
+  cluster_name: securedme-cluster
+
+# Cache layer configurations
+cache:
+  enabled: true
+  expire_hours: 24

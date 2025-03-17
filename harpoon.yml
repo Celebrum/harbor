@@ -1,0 +1,72 @@
+# Harpoon configuration for container assembly line
+
+# Enable Harpoon for assembly pipeline
+enabled: true
+
+# Harpoon core settings
+core:
+  # Enable integration with Harbor registry
+  harbor_integration: true
+  # Assembly line worker pool size
+  workers: 6
+  # Log level (debug, info, warning, error)
+  log_level: info
+
+# Kubernetes integration for container assembly
+kubernetes:
+  # Use existing Kind cluster
+  use_kind: true
+  # Kind cluster name (based on your container names)
+  cluster_name: securedme-cluster
+  # Number of nodes to use for container assembly
+  node_count: 6
+  # Resource limits for assembly jobs
+  resource_limits:
+    cpu: "2"
+    memory: "4Gi"
+
+# Docker Swarm integration
+swarm:
+  enabled: true
+  # Use existing swarm network
+  use_existing_network: true
+  # Network name for container communication
+  network_name: ingress
+
+# Assembly line pipeline configuration
+pipeline:
+  # Enable parallel processing of container images
+  parallel_processing: true
+  # Enable automatic security scanning with Trivy
+  security_scan: true
+  # Enable container image optimization
+  optimize_images: true
+  # Enable container signing
+  signing: true
+  # Enable artifact provenance
+  provenance: true
+
+# Registry configuration
+registry:
+  # Use Harbor as the primary registry
+  use_harbor: true
+  # Allow external registries
+  allow_external: true
+  # Trusted external registries
+  trusted_registries:
+    - docker.io
+    - ghcr.io
+    - quay.io
+
+# Webhook notifications for assembly line events
+webhooks:
+  enabled: false
+  # endpoints:
+  #   - url: http://example.com/webhook
+  #     headers:
+  #       Authorization: Bearer token123
+
+# Storage settings for assembly artifacts
+storage:
+  # Use Harbor's storage
+  use_harbor_storage: true

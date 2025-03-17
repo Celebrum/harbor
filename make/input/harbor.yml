@@ -1,0 +1,87 @@
+# Configuration file of Harbor with Harpoon enabled for assembly line
+
+# The IP address or hostname to access admin UI and registry service.
+# DO NOT use localhost or 127.0.0.1, because Harbor needs to be accessed by external clients.
+hostname: reg.localhost
+
+# http related config
+http:
+  # port for http, default is 80. If https enabled, this port will redirect to https port
+  port: 80
+
+# https related config
+# https:
+#   # https port for harbor, default is 443
+#   port: 443
+#   # The path of cert and key files for nginx
+#   certificate: /your/certificate/path
+#   private_key: /your/private/key/path
+
+# The initial password of Harbor admin
+# It only works in first time to install harbor
+# Remember Change the admin password from UI after launching Harbor.
+harbor_admin_password: Harbor12345
+
+# Harbor DB configuration
+database:
+  # The password for the user('postgres' by default) of Harbor DB. Change this before any production use.
+  password: root123
+  # The maximum number of connections in the idle connection pool. If it <=0, no idle connections are retained.
+  max_idle_conns: 100
+  # The maximum number of open connections to the database. If it <= 0, then there is no limit on the number of open connections.
+  max_open_conns: 900
+  conn_max_lifetime: 5m
+  conn_max_idle_time: 0
+
+# The default data volume
+data_volume: /data
+
+# Enable Harpoon for image assembly pipeline
+harpoon:
+  enabled: true
+  # Configure Harpoon to work with your Kind cluster nodes
+  kubernetes_integration: true
+  # Use swarm networking for container assembly
+  use_swarm_networking: true
+
+# Log configurations
+log:
+  # options are debug, info, warning, error, fatal
+  level: info
+  # configs for logs in local storage
+  local:
+    rotate_count: 50
+    rotate_size: 200M
+    location: /var/log/harbor
+
+# Trivy configuration
+trivy:
+  ignore_unfixed: false
+  skip_update: false
+  skip_java_db_update: false
+  offline_scan: false
+  security_check: vuln
+  insecure: false
+  timeout: 5m0s
+
+jobservice:
+  # Maximum number of job workers in job service
+  max_job_workers: 10
+  job_loggers:
+    - STD_OUTPUT
+    - FILE
+  logger_sweeper_duration: 1 #days
+
+notification:
+  webhook_job_max_retry: 3
+  webhook_job_http_client_timeout: 3 #seconds
+
+# This attribute is for migrator to detect the version of the .cfg file, DO NOT MODIFY!
+_version: 2.12.0
+
+# Enable purge _upload directories
+upload_purging:
+  enabled: true
+  age: 168h
+  interval: 24h
+  dryrun: false

@@ -10,13 +10,35 @@ else
 fi
 echo "prepare base dir is set to ${harbor_prepare_path}"
 
+# Check if running in WSL and adjust path if needed
+if [[ "$(uname -r)" == *Microsoft* || "$(uname -r)" == *microsoft* ]]; then
+    # Check if we're in the Windows mount path structure
+    if [[ "$harbor_prepare_path" == /mnt/* ]]; then
+        # If we're in WSL, try to look for the harbor.yml file one level up
+        echo "WSL environment detected, checking parent directory for harbor.yml"
+        parent_dir="$(dirname "$harbor_prepare_path")"
+        if [ -f "${parent_dir}/harbor.yml" ]; then
+            echo "Found harbor.yml in parent directory"
+            cp ${parent_dir}/harbor.yml ${harbor_prepare_path}/
+        fi
+    fi
+fi
+
+# Check for Harpoon configuration
+if [ -f "${harbor_prepare_path}/harpoon.yml" ]; then
+    echo "Harpoon configuration detected"
+    use_harpoon=true
+else
+    use_harpoon=false
+fi
+
 # Clean up input dir
 rm -rf ${harbor_prepare_path}/input
-# Create a input dirs
+# Create input dirs
 mkdir -p ${harbor_prepare_path}/input
 input_dir=${harbor_prepare_path}/input
 
-# Copy harbor.yml to input dir
+# Copy configuration files to input dir
 if [[ ! "$1" =~ ^\-\- ]] && [ -f "$1" ]
 then
     cp $1 $input_dir/harbor.yml
@@ -25,9 +47,28 @@ else
     if [ -f "${harbor_prepare_path}/harbor.yml" ];then
         cp ${harbor_prepare_path}/harbor.yml $input_dir/harbor.yml
     else
-        echo "no config file: ${harbor_prepare_path}/harbor.yml"
-        exit 1
+        # If harbor.yml doesn't exist, copy from template if available
+        if [ -f "${harbor_prepare_path}/harbor.yml.tmpl" ]; then
+            echo "Creating harbor.yml from template"
+            cp ${harbor_prepare_path}/harbor.yml.tmpl ${harbor_prepare_path}/harbor.yml
+            cp ${harbor_prepare_path}/harbor.yml $input_dir/harbor.yml
+        else
+            echo "no config file: ${harbor_prepare_path}/harbor.yml"
+            echo "Please create a harbor.yml file based on harbor.yml.tmpl before running prepare"
+            exit 1
+        fi
     fi
+fi
+
+# Copy Harpoon config if exists
+if [ "$use_harpoon" = true ]; then
+    cp ${harbor_prepare_path}/harpoon.yml $input_dir/harpoon.yml
+fi
+
+# Continue only if we have a valid harbor.yml
+if [ ! -f "${input_dir}/harbor.yml" ]; then
+    echo "harbor.yml not found in input directory, exiting"
+    exit 1
 fi
 
 data_path=$(grep '^[^#]*data_volume:' $input_dir/harbor.yml | awk '{print $NF}')
@@ -45,7 +86,6 @@ if [ -f $previous_defaultalias_path ]; then
     mv $previous_defaultalias_path $data_path/secret/keys
 fi
 
-
 # Create secret dir
 secret_dir=${data_path}/secret
 config_dir=$harbor_prepare_path/common/config
@@ -57,14 +97,14 @@ if [ "$(uname)" == "Darwin" ]; then
     prepare_base_dir=$HOME
 fi
 
-# Run prepare script
+# Run prepare script with Harpoon support
 docker run --rm -v $input_dir:/input \
                     -v $data_path:/data \
                     -v $harbor_prepare_path:/compose_location \
                     -v $config_dir:/config \
                     -v ${prepare_base_dir}:/hostfs${prepare_base_dir} \
                     --privileged \
-                    goharbor/prepare:dev prepare $@
+                    goharbor/prepare:dev prepare $@ ${use_harpoon:+--with-harpoon}
 
 echo "Clean up the input dir"
 # Clean up input dir
