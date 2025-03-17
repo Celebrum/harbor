@@ -1,72 +1,98 @@
-# Harpoon configuration for container assembly line
+# Harpoon Configuration File
+# This configures Harpoon to integrate with Harbor and Kubernetes
 
-# Enable Harpoon for assembly pipeline
-enabled: true
-
-# Harpoon core settings
+# Core Harpoon Settings
 core:
-  # Enable integration with Harbor registry
-  harbor_integration: true
-  # Assembly line worker pool size
-  workers: 6
+  # Enable Harpoon
+  enabled: true
   # Log level (debug, info, warning, error)
   log_level: info
+  # Data directory
+  data_dir: /data/harpoon
 
-# Kubernetes integration for container assembly
+# Harbor Integration
+harbor:
+  # URL of Harbor API (internal)
+  url: http://core:8080
+  # Admin credentials
+  admin_user: admin
+  admin_password: Harbor12345
+  # Enable all Harbor capabilities
+  enable_all_capabilities: true
+
+# Kubernetes Integration
 kubernetes:
+  # Enable Kubernetes integration
+  enabled: true
   # Use existing Kind cluster
   use_kind: true
-  # Kind cluster name (based on your container names)
+  # Kind cluster name
   cluster_name: securedme-cluster
-  # Number of nodes to use for container assembly
+  # Number of nodes to use
   node_count: 6
-  # Resource limits for assembly jobs
-  resource_limits:
-    cpu: "2"
-    memory: "4Gi"
+  # Namespace for Harpoon components
+  namespace: harpoon-system
+  # Service account for Harpoon
+  service_account: harpoon-sa
 
-# Docker Swarm integration
-swarm:
+# Image Building and Assembly
+builder:
+  # Enable image building capabilities
   enabled: true
-  # Use existing swarm network
-  use_existing_network: true
-  # Network name for container communication
-  network_name: ingress
+  # Maximum concurrent builds
+  max_concurrent_builds: 5
+  # Timeout for build operations (in seconds)
+  build_timeout: 1800
+  # Enable layer caching
+  layer_cache: true
+  # Build cache size limit (in GB)
+  cache_size_limit: 10
 
-# Assembly line pipeline configuration
-pipeline:
-  # Enable parallel processing of container images
-  parallel_processing: true
-  # Enable automatic security scanning with Trivy
-  security_scan: true
-  # Enable container image optimization
-  optimize_images: true
-  # Enable container signing
-  signing: true
-  # Enable artifact provenance
-  provenance: true
+# Container Security
+security:
+  # Enable security scanning
+  scan_enabled: true
+  # Use Trivy for vulnerability scanning
+  use_trivy: true
+  # Block images with critical vulnerabilities
+  block_critical: false
+  # Enable signature verification
+  verify_signatures: false
+  # Enable SBOM generation
+  generate_sbom: true
 
-# Registry configuration
-registry:
-  # Use Harbor as the primary registry
-  use_harbor: true
-  # Allow external registries
-  allow_external: true
-  # Trusted external registries
-  trusted_registries:
-    - docker.io
-    - ghcr.io
-    - quay.io
+# Resource Limits
+resources:
+  cpu:
+    # CPU request for Harpoon components (in CPUs)
+    request: "0.5"
+    # CPU limit for Harpoon components (in CPUs)
+    limit: "2"
+  memory:
+    # Memory request for Harpoon components (in GB)
+    request: "1Gi"
+    # Memory limit for Harpoon components (in GB)
+    limit: "4Gi"
 
-# Webhook notifications for assembly line events
+# Webhooks
 webhooks:
+  # Enable webhook notifications
   enabled: false
-  # endpoints:
-  #   - url: http://example.com/webhook
-  #     headers:
-  #       Authorization: Bearer token123
+  # Maximum retry attempts for webhook delivery
+  max_retry: 3
+  # Timeout for webhook requests (in seconds)
+  timeout: 5
 
-# Storage settings for assembly artifacts
+# Storage
 storage:
-  # Use Harbor's storage
+  # Use Harbor's storage backend
   use_harbor_storage: true
+
+# Networking
+networking:
+  # Enable ingress for Harpoon API
+  enable_ingress: false
+  # Expose metrics
+  expose_metrics: true
+  # Port for metrics
+  metrics_port: 9090
